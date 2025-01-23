@@ -60,11 +60,11 @@ const data = {
       items: [
         {
           title: "Ledger",
-          url: "#",
+          url: "/masters/ledger",
         },
         {
           title: "Product",
-          url: "#",
+          url: "/masters/product",
         },
         // {
         //   title: "Settings",
@@ -98,11 +98,11 @@ const data = {
       items: [
         {
           title: "Invoice/Proforma Invoice",
-          url: "#",
+          url: "/transaction/invoice-proforma",
         },
         {
           title: "Payment/Receipt",
-          url: "#",
+          url: "/transaction/payment-receipt",
         },
         // {
         //   title: "Tutorials",
@@ -120,8 +120,8 @@ const data = {
       icon: FileChartColumn,
       items: [
         {
-          title: "General",
-          url: "#",
+          title: "Ledger Report",
+          url: "/reports/LedgerReport",
         },
         {
           title: "Team",
