@@ -13,13 +13,8 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+
 import React, { useState } from "react";
 import {
   Command,
@@ -44,9 +39,10 @@ const formSchema = z.object({
     .max(255),
   HSNCode: z.string().max(20),
   ProductDescription: z.string(),
-  UnitPrice: z.number().positive(),
-  OpeningUnits: z.number().positive(),
-  OpeningBalance: z.number().positive(),
+  UnitPrice: z.coerce.number().positive(),
+  OpeningUnits: z.coerce.number().positive(),
+  OpeningBalance: z.coerce.number().positive(),
+  IsActive: z.boolean(),
 });
 
 const languages = [
@@ -59,8 +55,8 @@ const languages = [
 ] as const;
 
 const ProductMaster: React.FC = () => {
-  const [open, setOpen] = React.useState(false);
-  const [value, setValue] = React.useState("");
+  // const [open, setOpen] = React.useState(false);
+  // const [value, setValue] = React.useState("");
   // 1. Define your form.
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -71,13 +67,16 @@ const ProductMaster: React.FC = () => {
       UnitPrice: 0,
       OpeningUnits: 0,
       OpeningBalance: 0,
+      IsActive: false,
     },
   });
   // 2. Define a submit handler.
   function onSubmit(values: z.infer<typeof formSchema>) {
     // Do something with the form values.
     // ✅ This will be type-safe and validated.
-    console.log(values);
+    const payload = { ...values };
+    console.log(JSON.stringify(payload, null, 2));
+    //console.log(values);
   }
   return (
     <div className="w-full">
@@ -189,7 +188,7 @@ const ProductMaster: React.FC = () => {
                   <FormLabel>Unit Price</FormLabel>
                   <FormControl>
                     <Input
-                      type="number"
+                      // type="number"
                       step="1.00"
                       placeholder="Enter Unit Price"
                       {...field}
@@ -236,6 +235,21 @@ const ProductMaster: React.FC = () => {
               )}
             />
           </div>
+          <FormField
+            control={form.control}
+            name="IsActive"
+            render={({ field }) => (
+              <FormItem className="flex flex-row items-start space-x-3 space-y-0 ">
+                <FormLabel>Active</FormLabel>
+                <FormControl>
+                  <Checkbox
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
           <Button type="submit">Submit</Button>
         </form>
       </Form>

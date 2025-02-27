@@ -1,18 +1,15 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { FormProvider, useForm } from "react-hook-form";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import {
-  Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -22,7 +19,17 @@ import {
 } from "@/components/ui/select";
 import React, { useState } from "react";
 import DebCustBankAddinList from "@/components/DebCustBankAddinList";
+import DebtorCreditorForm from "@/components/forms/DebtorCreditorForm";
+import BankDetailsForm from "@/components/forms/BankDetailsForm";
 
+// Define a type for bank details.
+interface BankDetail {
+  accountType: string;
+  accountNumber: string;
+  bankBranch: string;
+  ifscCode: string;
+  micrCode: string;
+}
 
 const formSchema = z.object({
   CompanyName: z
@@ -32,51 +39,140 @@ const formSchema = z.object({
     })
     .max(50),
   SubHead: z.string(),
+  // Bank detail fields (managed separately via addBankDetails)
+  BankDetails: z.string(),
   AccountType: z.string(),
+  AccountNumber: z.string(),
+  BankBranch: z.string(),
+  IFSCCode: z.string(),
+  MICRCode: z.string(),
+
+  // DebtorCreditorForm fields
+  AddressLine1: z.string(),
+  AddressLine2: z.string().optional(),
+  City: z.string(),
+  State: z.string(),
+  PostalCode: z.string(),
+  Country: z.string(),
+  PhoneNumber: z.string(),
+  Email: z.string().email(),
+  RegistrationType: z.string(),
+  GSTNumber: z.string().optional(),
+  PANNumber: z.string().optional(),
 });
 
 const LedgerMaster: React.FC = () => {
   const [selectedSubhead, setSelectedSubhead] = useState("");
   const [showBankDetails, setShowBankDetails] = useState(false);
-  const [bankDetails, setBankDetails] = useState<{ accountType: string; accountNumber: string; bankBranch: string; ifscCode: string; micrCode: string; }[]>([]);
+  const [bankDetails, setBankDetails] = useState<BankDetail[]>([]);
   // 1. Define your form.
-  const form = useForm<z.infer<typeof formSchema>>({
+  const methods = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       CompanyName: "",
       SubHead: "",
-      AccountType:"",
+      BankDetails: "No",
+      AccountType: "",
+      AccountNumber: "",
+      BankBranch: "",
+      IFSCCode: "",
+      MICRCode: "",
+      AddressLine1: "",
+      AddressLine2: "",
+      City: "",
+      State: "",
+      PostalCode: "",
+      Country: "",
+      PhoneNumber: "",
+      Email: "",
+      RegistrationType: "",
+      GSTNumber: "",
+      PANNumber: "",
     },
   });
+
   // 2. Define a submit handler.
   function onSubmit(values: z.infer<typeof formSchema>) {
     // Do something with the form values.
     // ✅ This will be type-safe and validated.
-    console.log(values);
+    if (selectedSubhead === "Debtors" || selectedSubhead === "Creditors") {
+      const {
+        AccountType,
+        AccountNumber,
+        BankBranch,
+        IFSCCode,
+        MICRCode,
+        ...rest
+      } = values;
+      const payload = { ...rest, bankDetails };
+      console.log(JSON.stringify(payload, null, 2));
+    } else if (selectedSubhead === "Bank") {
+      const {
+        AddressLine1,
+        AddressLine2,
+        City,
+        State,
+        PostalCode,
+        Country,
+        PhoneNumber,
+        Email,
+        RegistrationType,
+        GSTNumber,
+        PANNumber,
+        ...rest
+      } = values;
+      const payload = { ...rest };
+      console.log(JSON.stringify(payload, null, 2));
+    }
+    //console.log("Hello");
   }
 
   const addBankDetails = () => {
-    const values = form.getValues();
-    setBankDetails([
-      ...bankDetails,
-      {
-        accountType: values.AccountType,
-        accountNumber: values.AccountNumber,
-        bankBranch: values.BankBranch,
-        ifscCode: values.IFSCCode,
-        micrCode: values.MICRCode,
-      },
-    ]);
+    const values = methods.getValues() as z.infer<typeof formSchema>;
+
+    // Create a BankDetail object with fallback values for optional fields.
+    const newBankDetail: BankDetail = {
+      accountType: values.AccountType || "",
+      accountNumber: values.AccountNumber || "",
+      bankBranch: values.BankBranch || "",
+      ifscCode: values.IFSCCode || "",
+      micrCode: values.MICRCode || "",
+    };
+
+    setBankDetails([...bankDetails, newBankDetail]);
+
+    // Clear the bank details fields after adding.
+    methods.setValue("AccountType", "");
+    methods.setValue("AccountNumber", "");
+    methods.setValue("BankBranch", "");
+    methods.setValue("IFSCCode", "");
+    methods.setValue("MICRCode", "");
+  };
+
+  const handleEditBankDetail = (index: number) => {
+    const detail = bankDetails[index];
+    // Load record into the form for editing.
+    methods.setValue("AccountType", detail.accountType);
+    methods.setValue("AccountNumber", detail.accountNumber);
+    methods.setValue("BankBranch", detail.bankBranch);
+    methods.setValue("IFSCCode", detail.ifscCode);
+    methods.setValue("MICRCode", detail.micrCode);
+    // Optionally, remove the record from the list so that updating it will re-add it.
+    //setBankDetails(bankDetails.filter((_, i) => i !== index));
+  };
+
+  const handleDeleteBankDetail = (index: number) => {
+    setBankDetails(bankDetails.filter((_, i) => i !== index));
   };
 
   return (
     <div className="w-full">
       <h1 className="text-center">Ledger Master</h1>
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+      <FormProvider {...methods}>
+        <form onSubmit={methods.handleSubmit(onSubmit)} className="space-y-8">
           <div className="flex gap-8 w-1/2 pr-5 ">
             <FormField
-              control={form.control}
+              control={methods.control}
               name="CompanyName"
               render={({ field }) => (
                 <FormItem className="w-full">
@@ -92,7 +188,7 @@ const LedgerMaster: React.FC = () => {
               )}
             />
             <FormField
-              control={form.control}
+              control={methods.control}
               name="SubHead"
               render={({ field }) => (
                 <FormItem className="w-full">
@@ -127,200 +223,21 @@ const LedgerMaster: React.FC = () => {
           </div>
           {(selectedSubhead === "Debtors" ||
             selectedSubhead === "Creditors") && (
-            <div id="CustomerDtl" className="flex gap-3 w-full flex-col">
-              <div className="flex gap-8 w-full">
-                <FormField
-                  control={form.control}
-                  name="AddressLine1"
-                  render={({ field }) => (
-                    <FormItem className="w-full">
-                      <FormLabel>Address Line 1</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="Enter Address Line 1"
-                          className="resize-none"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="AddressLine2"
-                  render={({ field }) => (
-                    <FormItem className="w-full">
-                      <FormLabel>Address Line 2</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="Enter Address Line 2"
-                          className="resize-none"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              <div className="flex gap-8 w-full">
-                <FormField
-                  control={form.control}
-                  name="City"
-                  render={({ field }) => (
-                    <FormItem className="w-full">
-                      <FormLabel>City</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter City" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="State"
-                  render={({ field }) => (
-                    <FormItem className="w-full">
-                      <FormLabel>State</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter State" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="PostalCode"
-                  render={({ field }) => (
-                    <FormItem className="w-full">
-                      <FormLabel>Postal Code</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter Postal Code" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="Country"
-                  render={({ field }) => (
-                    <FormItem className="w-full">
-                      <FormLabel>Country</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter Country" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              <div className="flex gap-8 w-full">
-                <div className="flex gap-8 w-full">
-                  <FormField
-                    control={form.control}
-                    name="PhoneNumber"
-                    render={({ field }) => (
-                      <FormItem className="w-full">
-                        <FormLabel>Phone Number</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter Phone Number" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="Email"
-                    render={({ field }) => (
-                      <FormItem className="w-full">
-                        <FormLabel>Email</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter Email" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                <div className="flex gap-5 w-full">
-                  <FormField
-                    control={form.control}
-                    name="RegistrationType"
-                    render={({ field }) => (
-                      <FormItem className="w-full">
-                        <FormLabel>Registration Type</FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                          // onValueChange={(value) => {
-                          //   field.onChange(value);
-                          //   setSelectedSubhead(value);
-                          // }}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select Registration" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="Regular">Regular</SelectItem>
-                            <SelectItem value="Unregistered">
-                              Unregistered
-                            </SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="GSTNumber"
-                    render={({ field }) => (
-                      <FormItem className="w-full">
-                        <FormLabel>GST Number</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter GST Number" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="PANNumber"
-                    render={({ field }) => (
-                      <FormItem className="w-full">
-                        <FormLabel>PAN Number</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter PAN Number" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </div>
+            <>
+              <DebtorCreditorForm />
               <div className="flex gap-5 w-1/4">
                 <FormField
-                  control={form.control}
-                  name="IsBankDetails"
+                  control={methods.control}
+                  name="BankDetails"
                   render={({ field }) => (
                     <FormItem className="w-1/2 pr-4">
                       <FormLabel>Bank Details</FormLabel>
                       <Select
-                        // onValueChange={field.onChange}
-                        // defaultValue={field.value}
                         onValueChange={(value) => {
                           field.onChange(value);
-                          setShowBankDetails(value == "Yes");
+                          setShowBankDetails(value === "Yes");
                         }}
-                        defaultValue={"No"}
+                        defaultValue={field.value}
                       >
                         <FormControl>
                           <SelectTrigger>
@@ -337,229 +254,29 @@ const LedgerMaster: React.FC = () => {
                   )}
                 />
               </div>
-              {showBankDetails && (
-                <div
-                  id="CustomerBankDtl"
-                  className="flex gap-3 w-full flex-col "
-                >
-                  <div className="flex gap-8 w-full">
-                    <div className="flex gap-8 w-full">
-                      <FormField
-                        control={form.control}
-                        name="AccountType"
-                        render={({ field }) => (
-                          <FormItem className="w-full">
-                            <FormLabel>Account Type</FormLabel>
-                            <Select
-                              onValueChange={field.onChange}
-                              defaultValue={field.value}
-                              // onValueChange={(value) => {
-                              //   field.onChange(value);
-                              //   setSelectedSubhead(value);
-                              // }}
-                            >
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select an Account Type" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                <SelectItem value="Savings">Savings</SelectItem>
-                                <SelectItem value="Current">Current</SelectItem>
-                                <SelectItem value="Fixed deposit">
-                                  Fixed deposit
-                                </SelectItem>
-                                <SelectItem value="Recurring deposit">
-                                  Recurring deposit
-                                </SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="AccountNumber"
-                        render={({ field }) => (
-                          <FormItem className="w-full">
-                            <FormLabel>Account Number</FormLabel>
-                            <FormControl>
-                              <Input
-                                placeholder="Enter Account Number"
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                    <div className="flex gap-8 w-full">
-                      <FormField
-                        control={form.control}
-                        name="BankBranch"
-                        render={({ field }) => (
-                          <FormItem className="w-full">
-                            <FormLabel>Bank Branch</FormLabel>
-                            <FormControl>
-                              <Input
-                                placeholder="Enter Bank Branch"
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                  </div>
-                  <div className="flex gap-8 w-1/2 pr-4">
-                    <FormField
-                      control={form.control}
-                      name="IFSCCode"
-                      render={({ field }) => (
-                        <FormItem className="w-full">
-                          <FormLabel>IFSC Code</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Enter IFSC Code" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="MICRCode"
-                      render={({ field }) => (
-                        <FormItem className="w-full">
-                          <FormLabel>MICR Code</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Enter MICR Code" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                  <div>
-                  <DebCustBankAddinList bankDetails={bankDetails}/>
-                  </div>
-                  <div>
-                    <Button type="button" onClick={addBankDetails}>
-                      Add Bank Details
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </div>
+            </>
           )}
-          {selectedSubhead === "Bank" && (
-            <div id="BankDtl" className="flex gap-3 w-full flex-col ">
-              <div className="flex gap-8 w-full">
-                <div className="flex gap-8 w-full">
-                  <FormField
-                    control={form.control}
-                    name="AccountType"
-                    render={({ field }) => (
-                      <FormItem className="w-full">
-                        <FormLabel>Account Type</FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                          // onValueChange={(value) => {
-                          //   field.onChange(value);
-                          //   setSelectedSubhead(value);
-                          // }}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select an Account Type" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="Savings">Savings</SelectItem>
-                            <SelectItem value="Current">Current</SelectItem>
-                            <SelectItem value="Fixed deposit">
-                              Fixed deposit
-                            </SelectItem>
-                            <SelectItem value="Recurring deposit">
-                              Recurring deposit
-                            </SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="AccountNumber"
-                    render={({ field }) => (
-                      <FormItem className="w-full">
-                        <FormLabel>Account Number</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="Enter Account Number"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                <div className="flex gap-8 w-full">
-                  <FormField
-                    control={form.control}
-                    name="BankBranch"
-                    render={({ field }) => (
-                      <FormItem className="w-full">
-                        <FormLabel>Bank Branch</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter Bank Branch" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </div>
-              <div className="flex gap-8 w-1/2 pr-4">
-                <FormField
-                  control={form.control}
-                  name="IFSCCode"
-                  render={({ field }) => (
-                    <FormItem className="w-full">
-                      <FormLabel>IFSC Code</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter IFSC Code" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="MICRCode"
-                  render={({ field }) => (
-                    <FormItem className="w-full">
-                      <FormLabel>MICR Code</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter MICR Code" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </div>
+          {(showBankDetails || selectedSubhead === "Bank") && (
+            <BankDetailsForm />
           )}
+
+          {showBankDetails &&
+            (selectedSubhead === "Debtors" ||
+              selectedSubhead === "Creditors") && (
+              <>
+                <Button type="button" onClick={addBankDetails}>
+                  Add Bank Details
+                </Button>
+                <DebCustBankAddinList
+                  bankDetails={bankDetails}
+                  onEdit={handleEditBankDetail}
+                  onDelete={handleDeleteBankDetail}
+                />
+              </>
+            )}
           <Button type="submit">Submit</Button>
         </form>
-      </Form>
+      </FormProvider>
     </div>
   );
 };
