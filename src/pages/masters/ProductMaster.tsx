@@ -1,11 +1,11 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
+import { useEffect } from "react";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -15,7 +15,6 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 
-import React, { useState } from "react";
 import {
   Command,
   CommandEmpty,
@@ -31,6 +30,10 @@ import {
 } from "@/components/ui/popover";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { fetchProductDetails } from "./helper/mastersApiCall";
+
+const API_URL = import.meta.env.VITE_API_URL;
+const API_TOKEN = import.meta.env.VITE_API_TOKEN;
 
 const formSchema = z.object({
   ProductName: z
@@ -55,9 +58,6 @@ const languages = [
 ] as const;
 
 const ProductMaster: React.FC = () => {
-  // const [open, setOpen] = React.useState(false);
-  // const [value, setValue] = React.useState("");
-  // 1. Define your form.
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -70,12 +70,57 @@ const ProductMaster: React.FC = () => {
       IsActive: false,
     },
   });
-  // 2. Define a submit handler.
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    // Do something with the form values.
-    // ✅ This will be type-safe and validated.
+  // Read pid from the URL query string
+  const searchParams = new URLSearchParams(window.location.search);
+  const pid = searchParams.get("pid") || "0";
+  let action = searchParams.get("action") || "";
+
+  useEffect(() => {
+    if (pid !== "0") {
+      fetchProductDetails(pid).then((data) => {
+        if (data.table[0]) {
+          const prodData = data.table[0];
+          console.log(prodData);
+          form.reset({
+            ProductName: prodData.productName || "",
+            HSNCode: prodData.hsnCode || "",
+            ProductDescription: prodData.productDescription || "",
+            UnitPrice: Number(prodData.unitPrice) || 0,
+            OpeningUnits: Number(prodData.openingUnits) || 0,
+            OpeningBalance: Number(prodData.openingBalance) || 0,
+            IsActive: prodData.isActive || false,
+          });
+        }
+      });
+    }
+  }, [pid, form]);
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    const isAdd = action.toLowerCase() === "add";
+    const endpoint = isAdd ? "api/product/create" : `api/product/update/${pid}`;
+    const methodType = isAdd ? "POST" : "PUT";
     const payload = { ...values };
-    console.log(JSON.stringify(payload, null, 2));
+    //console.log(JSON.stringify(payload, null, 2));
+
+    try {
+      const response = await fetch(API_URL + endpoint, {
+        method: methodType,
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${API_TOKEN}`,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log("API response:", data);
+    } catch (error) {
+      console.error("Error submitting form:", error);
+    }
+
     //console.log(values);
   }
   return (
@@ -250,7 +295,9 @@ const ProductMaster: React.FC = () => {
               </FormItem>
             )}
           />
-          <Button type="submit">Submit</Button>
+          <Button type="submit">
+            {action.toLowerCase() === "add" ? "Submit" : "Update"}
+          </Button>
         </form>
       </Form>
     </div>

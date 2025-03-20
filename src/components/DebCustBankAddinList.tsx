@@ -14,7 +14,9 @@ import { TbEdit } from "react-icons/tb";
 interface BankDetail {
   accountType: string;
   accountNumber: string;
+  accountHolderName: string;
   bankBranch: string;
+  bankName: string;
   ifscCode: string;
   micrCode: string;
 }
@@ -39,9 +41,11 @@ const DebCustBankAddinList: React.FC<CustomerBankDetailsTableProps> = ({
           <TableHead>Del</TableHead>
           <TableHead>Account Type</TableHead>
           <TableHead>Account Number</TableHead>
+          <TableHead>Bank Name</TableHead>
           <TableHead>Bank Branch</TableHead>
           <TableHead>IFSC Code</TableHead>
           <TableHead>MICR Code</TableHead>
+          <TableHead>Account Holder Name</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -63,9 +67,11 @@ const DebCustBankAddinList: React.FC<CustomerBankDetailsTableProps> = ({
             </TableCell>
             <TableCell>{detail.accountType}</TableCell>
             <TableCell>{detail.accountNumber}</TableCell>
+            <TableCell>{detail.bankName}</TableCell>
             <TableCell>{detail.bankBranch}</TableCell>
             <TableCell>{detail.ifscCode}</TableCell>
             <TableCell>{detail.micrCode}</TableCell>
+            <TableCell>{detail.accountHolderName}</TableCell>
           </TableRow>
         ))}
       </TableBody>

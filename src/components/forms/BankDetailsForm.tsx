@@ -126,6 +126,19 @@ const BankDetails: React.FC = () => {
             </FormItem>
           )}
         />
+        <FormField
+          control={control}
+          name="BankName"
+          render={({ field }) => (
+            <FormItem className="w-full">
+              <FormLabel>Bank Name</FormLabel>
+              <FormControl>
+                <Input placeholder="Enter Bank Name" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
       </div>
     </div>
   );

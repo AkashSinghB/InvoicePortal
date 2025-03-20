@@ -15,13 +15,14 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-
+import AppBreadcrumb from "@/components/ui/myBreadcrumbItem";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import LedgerMaster from "./pages/masters/LedgerMaster";
 import ProductMaster from "./pages/masters/ProductMaster";
 import PaymentReceipt from "./pages/transaction/PaymentReceipt";
 import InvoiceProforma from "./pages/transaction/InvoiceProforma";
 import LedgerReport from "./pages/reports/LedgerReport";
+import BaseMaster from "./pages/base/BaseMaster";
 
 // export default function Page() {
 const App: React.FC = () => {
@@ -35,17 +36,18 @@ const App: React.FC = () => {
               <div className="flex items-center gap-2 px-4">
                 <SidebarTrigger className="-ml-1" />
                 <Separator orientation="vertical" className="mr-2 h-4" />
-                <Breadcrumb>
+                {/* <Breadcrumb>
                   <BreadcrumbList>
                     <BreadcrumbItem className="hidden md:block">
                       <BreadcrumbLink href="#">Dashboard</BreadcrumbLink>
                     </BreadcrumbItem>
-                    {/* <BreadcrumbSeparator className="hidden md:block" /> */}
-                    {/* <BreadcrumbItem>
+                    <BreadcrumbSeparator className="hidden md:block" />
+                    <BreadcrumbItem>
                     <BreadcrumbPage>Data Fetching</BreadcrumbPage>
-                  </BreadcrumbItem> */}
+                  </BreadcrumbItem>
                   </BreadcrumbList>
-                </Breadcrumb>
+                </Breadcrumb> */}
+                <AppBreadcrumb />
               </div>
               <div className="px-4">
                 <ModeToggle />
@@ -71,7 +73,11 @@ const App: React.FC = () => {
                   path="/transaction/invoice-proforma"
                   element={<InvoiceProforma />}
                 />
-                <Route path="/reports/LedgerReport" element={<LedgerReport />} />
+                <Route
+                  path="/reports/LedgerReport"
+                  element={<LedgerReport />}
+                />
+                <Route path="/base/BaseMaster" element={<BaseMaster />} />
               </Routes>
             </div>
           </SidebarInset>

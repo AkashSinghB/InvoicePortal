@@ -1,5 +1,5 @@
 import React from "react";
-import { useFormContext } from "react-hook-form";
+import { useController, useFormContext } from "react-hook-form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -66,7 +66,11 @@ const DebtorCreditorForm: React.FC = () => {
             <FormItem className="w-full">
               <FormLabel>City</FormLabel>
               <FormControl>
-                <Input placeholder="Enter City" {...field} />
+                <Input
+                  placeholder="Enter City"
+                  value={field.value || ""}
+                  onChange={field.onChange}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -149,12 +153,8 @@ const DebtorCreditorForm: React.FC = () => {
               <FormItem className="w-full">
                 <FormLabel>Registration Type</FormLabel>
                 <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                  // onValueChange={(value) => {
-                  //   field.onChange(value);
-                  //   setSelectedSubhead(value);
-                  // }}
+                  value={field.value || ""}
+                  onValueChange={(value) => field.onChange(value)}
                 >
                   <FormControl>
                     <SelectTrigger>
@@ -198,37 +198,6 @@ const DebtorCreditorForm: React.FC = () => {
           />
         </div>
       </div>
-      {/* <div className="flex gap-5 w-1/4">
-        <FormField
-          control={control}
-          name="IsBankDetails"
-          render={({ field }) => (
-            <FormItem className="w-1/2 pr-4">
-              <FormLabel>Bank Details</FormLabel>
-              <Select
-                // onValueChange={field.onChange}
-                // defaultValue={field.value}
-                onValueChange={(value) => {
-                  field.onChange(value);
-                  setShowBankDetails(value == "Yes");
-                }}
-                defaultValue={"No"}
-              >
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="--Select--" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="Yes">Yes</SelectItem>
-                  <SelectItem value="No">No</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      </div> */}
     </div>
   );
 };
