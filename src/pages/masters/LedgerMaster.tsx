@@ -22,6 +22,9 @@ import DebCustBankAddinList from "@/components/DebCustBankAddinList";
 import DebtorCreditorForm from "@/components/forms/DebtorCreditorForm";
 import BankDetailsForm from "@/components/forms/BankDetailsForm";
 import { fetchLedgerDetails } from "./helper/mastersApiCall";
+import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
+
 const API_URL = import.meta.env.VITE_API_URL;
 const API_TOKEN = import.meta.env.VITE_API_TOKEN;
 // Define a type for bank details.
@@ -63,8 +66,10 @@ const LedgerMaster: React.FC = () => {
   const [selectedSubhead, setSelectedSubhead] = useState("");
   const [showBankDetails, setShowBankDetails] = useState(false);
   const [bankDetails, setBankDetails] = useState<BankDetail[]>([]);
-  // State to hold ledger details fetched on page load.
   const [ledgerDetails, setLedgerDetails] = useState<any>(null);
+  const { toast } = useToast();
+  const navigate = useNavigate();
+
   // 1. Define your form.
   const methods = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -96,6 +101,7 @@ const LedgerMaster: React.FC = () => {
   const searchParams = new URLSearchParams(window.location.search);
   let pid = searchParams.get("pid") || "0";
   let action = searchParams.get("action") || "";
+  const isView = action.toLowerCase() === "view";
 
   if (!pid) {
     console.error("pid not found in the URL");
@@ -249,9 +255,23 @@ const LedgerMaster: React.FC = () => {
       }
 
       const data = await response.json();
-      console.log("API response:", data);
+
+      const msg = isAdd
+        ? "Record saved successfully"
+        : "Record updated successfully";
+      toast({
+        title: msg,
+        // description: msg,
+        // action: <ToastAction altText="Try again">Try again</ToastAction>,
+      });
+      navigate("/base/basemaster?mod=LedgerMast");
+      console.log("API response:", data.result);
     } catch (error) {
       console.error("Error submitting form:", error);
+      toast({
+        title: "Error submitting Ledger:",
+        description: String(error),
+      });
     }
   }
   const addBankDetails = () => {
@@ -311,7 +331,11 @@ const LedgerMaster: React.FC = () => {
                 <FormItem className="w-full">
                   <FormLabel>Ledger Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="ex. akash corporation" {...field} />
+                    <Input
+                      placeholder="ex. akash corporation"
+                      {...field}
+                      disabled={isView}
+                    />
                   </FormControl>
                   {/* <FormDescription>
                   This is your public display name.
@@ -335,7 +359,7 @@ const LedgerMaster: React.FC = () => {
                     }}
                   >
                     <FormControl>
-                      <SelectTrigger>
+                      <SelectTrigger disabled={isView}>
                         <SelectValue placeholder="Select a subhead type" />
                       </SelectTrigger>
                     </FormControl>
