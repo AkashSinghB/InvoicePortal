@@ -1,5 +1,5 @@
-import React from "react";
-import { useController, useFormContext } from "react-hook-form";
+import React, { useEffect, useState } from "react";
+import { useFormContext } from "react-hook-form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -16,10 +16,88 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Check, ChevronsUpDown } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
-const DebtorCreditorForm: React.FC = () => {
-  const { control } = useFormContext();
+interface DebtorCreditorFormProps {
+  isView?: boolean;
+  ledgerDetails?: {
+    table?: any[];
+    table1?: { pid: number; stateName: string }[];
+    table2?: { pid: number; cityName: string; statePid: number }[];
+  };
+}
 
+const DebtorCreditorForm: React.FC<DebtorCreditorFormProps> = ({
+  isView,
+  ledgerDetails,
+}) => {
+  const { control, setValue, getValues } = useFormContext();
+
+  const [stateName, setStateName] = useState<
+    { id: number; label: string; value: string }[]
+  >([]);
+  const [cityName, setCityName] = useState<{ label: string; value: string }[]>(
+    []
+  );
+
+  useEffect(() => {
+    if (ledgerDetails?.table1) {
+      // Map over ledgerDetails.table1 data to populate options
+      const options = ledgerDetails.table1.map((item) => ({
+        id: item.pid,
+        label: item.stateName,
+        value: item.stateName,
+      }));
+      setStateName(options);
+    }
+
+    // const currentState = getValues("State");
+    // if (currentState && stateName.length > 0) {
+    //   const selected = stateName.find((opt) => opt.value === currentState);
+    //   if (selected) {
+    //     updateCityOptions(selected.id);
+    //     //setValue("City", "");
+    //   }
+    // }
+  }, [ledgerDetails]);
+  // Update city dropdown options based on selected state's id.
+  function updateCityOptions(selectedStatePid: number) {
+    if (ledgerDetails?.table2) {
+      const filteredCities = ledgerDetails.table2
+        .filter((city) => city.statePid === selectedStatePid)
+        .map((city) => ({
+          label: city.cityName,
+          value: city.cityName,
+        }));
+      setCityName(filteredCities);
+    }
+  }
+
+  useEffect(() => {
+    const currentState = getValues("State");
+    if (currentState && stateName.length > 0) {
+      const selected = stateName.find((opt) => opt.value === currentState);
+      if (selected) {
+        updateCityOptions(selected.id);
+        //setValue("City", "");
+      }
+    }
+  }, [ledgerDetails, stateName, getValues, setValue]);
   return (
     <div id="CustomerDtl" className="flex gap-3 w-full flex-col">
       <div className="flex gap-8 w-full">
@@ -59,36 +137,175 @@ const DebtorCreditorForm: React.FC = () => {
         />
       </div>
       <div className="flex gap-8 w-full">
-        <FormField
-          control={control}
-          name="City"
-          render={({ field }) => (
-            <FormItem className="w-full">
-              <FormLabel>City</FormLabel>
-              <FormControl>
-                <Input
-                  placeholder="Enter City"
-                  value={field.value || ""}
-                  onChange={field.onChange}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
+        {/* <FormField
           control={control}
           name="State"
           render={({ field }) => (
             <FormItem className="w-full">
               <FormLabel>State</FormLabel>
-              <FormControl>
-                <Input placeholder="Enter State" {...field} />
-              </FormControl>
+              <Select
+                value={field.value || ""}
+                onValueChange={(value) => {
+                  field.onChange(value);
+                }}
+                disabled={isView}
+              >
+                <FormControl>
+                  <SelectTrigger disabled={isView}>
+                    <SelectValue placeholder="Select state" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {ledgerDetails && ledgerDetails.table1
+                    ? ledgerDetails.table1.map(
+                        (item: { pid: number; stateName: string }) => (
+                          <SelectItem key={item.pid} value={item.stateName}>
+                            {item.stateName}
+                          </SelectItem>
+                        )
+                      )
+                    : null}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        /> */}
+        <FormField
+          control={control}
+          name="State"
+          render={({ field }) => (
+            <FormItem className="w-full flex flex-col justify-end gap-1">
+              <FormLabel>State</FormLabel>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <FormControl>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      className={cn(
+                        "justify-between",
+                        !field.value && "text-muted-foreground"
+                      )}
+                      disabled={isView}
+                    >
+                      {field.value
+                        ? stateName.find(
+                            (option) => option.value === field.value
+                          )?.label
+                        : "Select State"}
+                      <ChevronsUpDown className="opacity-50" />
+                    </Button>
+                  </FormControl>
+                </PopoverTrigger>
+                <PopoverContent className="w-[200px] p-0">
+                  <Command>
+                    <CommandInput
+                      placeholder="Search State..."
+                      className="h-9"
+                      disabled={isView}
+                    />
+                    <CommandList>
+                      <CommandEmpty>No State found.</CommandEmpty>
+                      <CommandGroup>
+                        {stateName.map((option) => (
+                          <CommandItem
+                            value={option.label}
+                            key={option.value}
+                            onSelect={() => {
+                              field.onChange(option.value);
+                              updateCityOptions(option.id);
+                              setValue("City", "");
+                            }}
+                            disabled={isView}
+                          >
+                            {option.label}
+                            <Check
+                              className={cn(
+                                "ml-auto",
+                                option.value === field.value
+                                  ? "opacity-100"
+                                  : "opacity-0"
+                              )}
+                            />
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
               <FormMessage />
             </FormItem>
           )}
         />
+        <FormField
+          control={control}
+          name="City"
+          render={({ field }) => (
+            <FormItem className="w-full flex flex-col justify-end gap-1">
+              <FormLabel>City</FormLabel>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <FormControl>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      className={cn(
+                        "justify-between",
+                        !field.value && "text-muted-foreground"
+                      )}
+                      disabled={isView}
+                    >
+                      {field.value
+                        ? cityName.find(
+                            (option) => option.value === field.value
+                          )?.label
+                        : "Select City"}
+                      <ChevronsUpDown className="opacity-50" />
+                    </Button>
+                  </FormControl>
+                </PopoverTrigger>
+                <PopoverContent className="w-[200px] p-0">
+                  <Command>
+                    <CommandInput
+                      placeholder="Search City..."
+                      className="h-9"
+                      disabled={isView}
+                    />
+                    <CommandList>
+                      <CommandEmpty>No City found.</CommandEmpty>
+                      <CommandGroup>
+                        {cityName.map((option) => (
+                          <CommandItem
+                            value={option.label}
+                            key={option.value}
+                            onSelect={() => {
+                              field.onChange(option.value);
+                            }}
+                            disabled={isView}
+                          >
+                            {option.label}
+                            <Check
+                              className={cn(
+                                "ml-auto",
+                                option.value === field.value
+                                  ? "opacity-100"
+                                  : "opacity-0"
+                              )}
+                            />
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
         <FormField
           control={control}
           name="PostalCode"
@@ -109,7 +326,11 @@ const DebtorCreditorForm: React.FC = () => {
             <FormItem className="w-full">
               <FormLabel>Country</FormLabel>
               <FormControl>
-                <Input placeholder="Enter Country" {...field} />
+                <Input
+                  placeholder="Enter Country"
+                  defaultValue="India"
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>

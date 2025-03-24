@@ -89,7 +89,7 @@ const LedgerMaster: React.FC = () => {
       City: "",
       State: "",
       PostalCode: "",
-      Country: "",
+      Country: "India",
       PhoneNumber: "",
       Email: "",
       RegistrationType: "",
@@ -113,16 +113,16 @@ const LedgerMaster: React.FC = () => {
       const details = await fetchLedgerDetails(pid as string);
       if (details) {
         setLedgerDetails(details);
-
-        if (details.table1 && details.table1.length > 0) {
-          const partyDetails = details.table1[0];
+        // console.log("Ledger details:", details);
+        if (details.table3 && details.table3.length > 0) {
+          const partyDetails = details.table3[0];
           //console.log("Ledger details:", partyDetails);
           setSelectedSubhead(partyDetails.accountTypeName);
           setShowBankDetails(partyDetails.isBankDtl);
           //console.log(showBankDetails);
           methods.reset({
             // ...methods.getValues(),
-            // Map ledgerName to CompanyName
+
             CompanyName: partyDetails.ledgerName || "",
             SubHead: partyDetails.accountTypeName || "",
             BankDetails: partyDetails.isBankDtl || false,
@@ -150,8 +150,8 @@ const LedgerMaster: React.FC = () => {
           });
         }
         // Map bank details from table2 to BankDetail interface.
-        if (details.table2 && details.table2.length > 0) {
-          const mappedBankDetails = details.table2.map((item: any) => ({
+        if (details.table4 && details.table4.length > 0) {
+          const mappedBankDetails = details.table4.map((item: any) => ({
             accountType: item.accountType || "",
             accountNumber: item.accountNumber || "",
             accountHolderName: item.accountHolderName || "",
@@ -265,7 +265,7 @@ const LedgerMaster: React.FC = () => {
         // action: <ToastAction altText="Try again">Try again</ToastAction>,
       });
       navigate("/base/basemaster?mod=LedgerMast");
-      console.log("API response:", data.result);
+      console.log("API response:", data);
     } catch (error) {
       console.error("Error submitting form:", error);
       toast({
@@ -389,7 +389,10 @@ const LedgerMaster: React.FC = () => {
           {(selectedSubhead === "Debtors" ||
             selectedSubhead === "Creditors") && (
             <>
-              <DebtorCreditorForm />
+              <DebtorCreditorForm
+                isView={isView}
+                ledgerDetails={ledgerDetails}
+              />
               <div className="flex gap-5 w-1/4">
                 <FormField
                   control={methods.control}
