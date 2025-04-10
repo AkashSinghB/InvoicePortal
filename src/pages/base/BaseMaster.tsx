@@ -3,7 +3,11 @@ import { Data, getDynamicColumns } from "./columns";
 import { DataTable } from "../../components/ui/data-table";
 import { ColumnDef } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
-import { GetNavigation } from "./helper/HelperBase";
+import {
+  GetNavigation,
+  fetchAllRecords,
+  deleteRecord,
+} from "./helper/HelperBase";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -13,23 +17,19 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { useLocation, useNavigate } from "react-router-dom";
-
-const API_URL = import.meta.env.VITE_API_URL;
-const API_TOKEN = import.meta.env.VITE_API_TOKEN;
+import { useLocation } from "react-router-dom";
 
 export default function BaseMaster() {
   const location = useLocation();
-  // const navigate = useNavigate();
 
-  // Update modCode and API URLs when location changes
   let searchParams = new URLSearchParams(location.search);
   let modCode = searchParams.get("mod");
   const navUrl = GetNavigation(modCode || "").navUrl;
-  const apiUrl = modCode ? GetNavigation(modCode).apiUrl || "" : "";
-  const apiUrlDel = modCode ? GetNavigation(modCode).apiUrlDel || "" : "";
+  const reqEndpoint = modCode ? GetNavigation(modCode).reqEndpoint || "" : "";
+  const reqEndpointDel = modCode
+    ? GetNavigation(modCode).reqEndpointDel || ""
+    : "";
   const [data, setData] = useState<Data[]>([]);
   const [columns, setColumns] = useState<ColumnDef<Data, any>[]>([]);
   const [loading, setLoading] = useState(true);
@@ -45,32 +45,16 @@ export default function BaseMaster() {
   };
 
   const handleEdit = (row: Data) => {
-    console.log("Edit row:", row);
     window.location.href = `${navUrl}?action=edit&pid=${row.pid}`;
-    // Add your edit logic here
   };
 
   const handleView = (row: Data) => {
-    console.log("View row:", row);
     window.location.href = `${navUrl}?action=view&pid=${row.pid}`;
-    // Add your view logic here
   };
 
   const handleDelete = async (row: Data) => {
-    //console.log("Delete row:", row);
     try {
-      // Adjust delete endpoint as needed; this one uses row.pid
-      const deleteEndpoint = `${apiUrlDel}${row.pid}`;
-      const response = await fetch(API_URL + deleteEndpoint, {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${API_TOKEN}`,
-        },
-      });
-      if (!response.ok) {
-        throw new Error(`Error deleting row: ${response.status}`);
-      }
+      await deleteRecord(reqEndpointDel, row.pid);
       console.log("Row deleted successfully");
 
       // Update the data state without refetching from the API.
@@ -81,31 +65,11 @@ export default function BaseMaster() {
       console.error("Error deleting item:", error);
     }
   };
-  // Asynchronous function to fetch dynamic data from your API.
-  async function getData(): Promise<Data[]> {
-    try {
-      const response = await fetch(API_URL + apiUrl, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${API_TOKEN}`,
-        },
-      });
-      if (!response.ok) {
-        throw new Error(`Error: ${response.status}`);
-      }
-      const jsonData = await response.json();
-      //console.log("Data fetched successfully:", jsonData);
-      return jsonData;
-    } catch (error) {
-      console.error("Error fetching data:", error);
-      return [];
-    }
-  }
 
-  if (apiUrl != null) {
+  if (reqEndpoint != null) {
     useEffect(() => {
       async function fetchData() {
-        const fetchedData = await getData();
+        const fetchedData = await fetchAllRecords(reqEndpoint);
         setData(fetchedData);
         setColumns(
           getDynamicColumns(fetchedData, handleEdit, handleView, confirmDelete)

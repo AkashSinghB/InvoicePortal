@@ -1,17 +1,34 @@
+const API_URL = import.meta.env.VITE_API_URL;
+const API_TOKEN = import.meta.env.VITE_API_TOKEN;
+
+export type Data = {
+  id: string;
+  [key: string]: any;
+};
+
 export const GetNavigation = (modCode: string) => {
   //   let targetUrl = "/";
   const navigationMap: {
-    [key: string]: { navUrl: string; apiUrl: string; apiUrlDel: string };
+    [key: string]: {
+      navUrl: string;
+      reqEndpoint: string;
+      reqEndpointDel: string;
+    };
   } = {
     LedgerMast: {
       navUrl: "/masters/ledger",
-      apiUrl: "api/ledger/fetch/Basedata",
-      apiUrlDel: "api/ledger/del/",
+      reqEndpoint: "api/ledger/fetch/Basedata",
+      reqEndpointDel: "api/ledger/del/",
     },
     ProdMast: {
       navUrl: "/masters/product",
-      apiUrl: "api/product/fetch/Basedata",
-      apiUrlDel: "api/product/del/",
+      reqEndpoint: "api/product/fetch/Basedata",
+      reqEndpointDel: "api/product/del/",
+    },
+    SalesInvoice: {
+      navUrl: "/transaction/invoice-proforma",
+      reqEndpoint: "api/invoice/sales/fetch/Basedata",
+      reqEndpointDel: "api/invoice/sales/del/",
     },
   };
 
@@ -26,3 +43,47 @@ export const GetNavigation = (modCode: string) => {
   //     return (targetUrl = `/masters/basemaster`);
   //   }
 };
+
+export async function fetchAllRecords(reqEndpoint: string): Promise<Data[]> {
+  try {
+    const response = await fetch(API_URL + reqEndpoint, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${API_TOKEN}`,
+      },
+    });
+    if (!response.ok) {
+      throw new Error(`Error: ${response.status}`);
+    }
+    const jsonData = await response.json();
+    //console.log("Data fetched successfully:", jsonData);
+    return jsonData;
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    return [];
+  }
+}
+
+export async function deleteRecord(
+  reqEndpointDel: string,
+  pid: string
+): Promise<void> {
+  const response = await fetch(API_URL + `${reqEndpointDel}${pid}`, {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${API_TOKEN}`,
+    },
+  });
+  if (!response.ok) {
+    let errorMessage = "";
+    const contentType = response.headers.get("Content-Type");
+    if (contentType && contentType.includes("application/json")) {
+      const errorData = await response.json();
+      errorMessage = errorData.message || JSON.stringify(errorData);
+    } else {
+      errorMessage = await response.text();
+    }
+    throw new Error(`Error deleting row: ${response.status} - ${errorMessage}`);
+  }
+}

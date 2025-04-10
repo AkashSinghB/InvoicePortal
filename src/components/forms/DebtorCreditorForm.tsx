@@ -313,7 +313,11 @@ const DebtorCreditorForm: React.FC<DebtorCreditorFormProps> = ({
             <FormItem className="w-full">
               <FormLabel>Postal Code</FormLabel>
               <FormControl>
-                <Input placeholder="Enter Postal Code" {...field} />
+                <Input
+                  placeholder="Enter Postal Code"
+                  {...field}
+                  maxLength={6}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -346,7 +350,11 @@ const DebtorCreditorForm: React.FC<DebtorCreditorFormProps> = ({
               <FormItem className="w-full">
                 <FormLabel>Phone Number</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter Phone Number" {...field} />
+                  <Input
+                    placeholder="Enter Phone Number"
+                    {...field}
+                    maxLength={10}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -359,7 +367,7 @@ const DebtorCreditorForm: React.FC<DebtorCreditorFormProps> = ({
               <FormItem className="w-full">
                 <FormLabel>Email</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter Email" {...field} />
+                  <Input placeholder="Enter Email" {...field} maxLength={100} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -398,7 +406,12 @@ const DebtorCreditorForm: React.FC<DebtorCreditorFormProps> = ({
               <FormItem className="w-full">
                 <FormLabel>GST Number</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter GST Number" {...field} />
+                  <Input
+                    className="uppercase"
+                    placeholder="Enter GST Number"
+                    {...field}
+                    maxLength={15}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -411,7 +424,12 @@ const DebtorCreditorForm: React.FC<DebtorCreditorFormProps> = ({
               <FormItem className="w-full">
                 <FormLabel>PAN Number</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter PAN Number" {...field} />
+                  <Input
+                    className="uppercase"
+                    placeholder="Enter PAN Number"
+                    {...field}
+                    maxLength={10}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>

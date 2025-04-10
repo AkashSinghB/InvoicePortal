@@ -10,6 +10,7 @@ import {
   getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
+  RowData,
 } from "@tanstack/react-table";
 import {
   Table,
@@ -34,7 +35,7 @@ interface DataTableProps<TData, TValue> {
   onRowClick?: (row: TData) => void;
 }
 
-export function DataTable<TData, TValue>({
+export function DataTable<TData extends RowData, TValue>({
   columns,
   data,
   onRowClick,
@@ -46,6 +47,8 @@ export function DataTable<TData, TValue>({
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
+  const [globalFilter, setGlobalFilter] = React.useState<string>("");
+
   const table = useReactTable({
     data,
     columns,
@@ -62,7 +65,10 @@ export function DataTable<TData, TValue>({
       columnFilters,
       columnVisibility,
       rowSelection,
+      globalFilter,
     },
+    globalFilterFn: "auto",
+    onGlobalFilterChange: setGlobalFilter,
   });
 
   return (
@@ -70,21 +76,8 @@ export function DataTable<TData, TValue>({
       <div className="flex items-center py-4">
         <Input
           placeholder="Filter data..."
-          // value={(table.getColumn("email")?.getFilterValue() as string) ?? ""}
-          // onChange={(event) =>
-          //   table.getColumn("email")?.setFilterValue(event.target.value)
-          // }
-          onChange={(event) => {
-            const searchValue = event.target.value;
-            // Apply the search value to the first two columns if they exist.
-            const allColumns = table.getAllColumns();
-            if (allColumns[0]) {
-              allColumns[0]?.setFilterValue(searchValue);
-            }
-            if (allColumns[1]) {
-              allColumns[1]?.setFilterValue(searchValue);
-            }
-          }}
+          value={globalFilter}
+          onChange={(event) => setGlobalFilter(event.target.value)}
           className="max-w-sm"
         />
         <DropdownMenu>
@@ -97,20 +90,16 @@ export function DataTable<TData, TValue>({
             {table
               .getAllColumns()
               .filter((column) => column.getCanHide())
-              .map((column) => {
-                return (
-                  <DropdownMenuCheckboxItem
-                    key={column.id}
-                    className="capitalize"
-                    checked={column.getIsVisible()}
-                    onCheckedChange={(value) =>
-                      column.toggleVisibility(!!value)
-                    }
-                  >
-                    {column.id}
-                  </DropdownMenuCheckboxItem>
-                );
-              })}
+              .map((column) => (
+                <DropdownMenuCheckboxItem
+                  key={column.id}
+                  className="capitalize"
+                  checked={column.getIsVisible()}
+                  onCheckedChange={(value) => column.toggleVisibility(!!value)}
+                >
+                  {column.id}
+                </DropdownMenuCheckboxItem>
+              ))}
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
@@ -119,18 +108,16 @@ export function DataTable<TData, TValue>({
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => {
-                  return (
-                    <TableHead key={header.id}>
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
-                    </TableHead>
-                  );
-                })}
+                {headerGroup.headers.map((header) => (
+                  <TableHead key={header.id}>
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
+                  </TableHead>
+                ))}
               </TableRow>
             ))}
           </TableHeader>
@@ -140,31 +127,20 @@ export function DataTable<TData, TValue>({
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
-                  //onClick={() => onRowClick && onRowClick(row.original)}
+                  onClick={() => onRowClick && onRowClick(row.original)}
                   className="cursor-pointer"
                 >
                   {row.getVisibleCells().map((cell) => (
-                    // <TableCell key={cell.id}>
-                    //   {flexRender(
-                    //     cell.column.columnDef.cell,
-                    //     cell.getContext()
-                    //   )}
-                    // </TableCell>
                     <TableCell
                       key={cell.id}
-                      // Apply a fixed width for action columns
                       style={
                         ["edit", "view"].includes(cell.column.id)
-                          ? {
-                              width: "2rem",
-                              // minWidth: "2rem",
-                              // maxWidth: "2rem",
-                            }
+                          ? { width: "2rem" }
                           : {}
                       }
                       className={
                         ["edit", "view"].includes(cell.column.id)
-                          ? " text-center"
+                          ? "text-center"
                           : ""
                       }
                     >

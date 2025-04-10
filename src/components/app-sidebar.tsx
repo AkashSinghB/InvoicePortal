@@ -95,7 +95,8 @@ const data = {
       items: [
         {
           title: "Invoice/Proforma Invoice",
-          url: "/transaction/invoice-proforma",
+          url: "/base/basemaster?mod=SalesInvoice",
+          // url: "/transaction/invoice-proforma",
         },
         {
           title: "Payment/Receipt",

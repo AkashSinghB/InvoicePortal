@@ -57,6 +57,21 @@ const BankDetails: React.FC = () => {
           />
           <FormField
             control={control}
+            name="BankName"
+            render={({ field }) => (
+              <FormItem className="w-full">
+                <FormLabel>Bank Name</FormLabel>
+                <FormControl>
+                  <Input placeholder="Enter Bank Name" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+        <div className="flex gap-8 w-full">
+          <FormField
+            control={control}
             name="BankBranch"
             render={({ field }) => (
               <FormItem className="w-full">
@@ -68,8 +83,6 @@ const BankDetails: React.FC = () => {
               </FormItem>
             )}
           />
-        </div>
-        <div className="flex gap-8 w-full">
           <FormField
             control={control}
             name="AccountNumber"
@@ -83,62 +96,58 @@ const BankDetails: React.FC = () => {
               </FormItem>
             )}
           />
+        </div>
+      </div>
+      <div className="flex gap-8 w-1/2 pr-4">
+        <FormField
+          control={control}
+          name="AccountHolderName"
+          render={({ field }) => (
+            <FormItem className="w-full">
+              <FormLabel>Account Holder Name</FormLabel>
+              <FormControl>
+                <Input placeholder="Enter Account Holder Name" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <div className="flex gap-8 w-full">
           <FormField
             control={control}
-            name="AccountHolderName"
+            name="IFSCCode"
             render={({ field }) => (
               <FormItem className="w-full">
-                <FormLabel>Account Holder Name</FormLabel>
+                <FormLabel>IFSC Code</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter Account Holder Name" {...field} />
+                  <Input
+                    placeholder="Enter IFSC Code"
+                    maxLength={11}
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={control}
+            name="MICRCode"
+            render={({ field }) => (
+              <FormItem className="w-full">
+                <FormLabel>MICR Code</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder="Enter MICR Code"
+                    maxLength={9}
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
         </div>
-      </div>
-      <div className="flex gap-8 w-1/2 pr-4">
-        <FormField
-          control={control}
-          name="IFSCCode"
-          render={({ field }) => (
-            <FormItem className="w-full">
-              <FormLabel>IFSC Code</FormLabel>
-              <FormControl>
-                <Input placeholder="Enter IFSC Code" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={control}
-          name="MICRCode"
-          render={({ field }) => (
-            <FormItem className="w-full">
-              <FormLabel>MICR Code</FormLabel>
-              <FormControl>
-                <Input placeholder="Enter MICR Code" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={control}
-          name="BankName"
-          render={({ field }) => (
-            <FormItem className="w-full">
-              <FormLabel>Bank Name</FormLabel>
-              <FormControl>
-                <Input placeholder="Enter Bank Name" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
       </div>
     </div>
   );
