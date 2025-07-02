@@ -1,22 +1,13 @@
-import { AppSidebar } from "@/components/app-sidebar";
+import Login from "./pages/user/Login";
+import Dashboard from "./pages/user/Dashboard";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ModeToggle } from "@/components/mode-toggle";
 import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
-import { Separator } from "@/components/ui/separator";
-import {
-  SidebarInset,
-  SidebarProvider,
-  SidebarTrigger,
-} from "@/components/ui/sidebar";
-import AppBreadcrumb from "@/components/ui/myBreadcrumbItem";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
 import LedgerMaster from "./pages/masters/LedgerMaster";
 import ProductMaster from "./pages/masters/ProductMaster";
 import PaymentReceipt from "./pages/transaction/PaymentReceipt";
@@ -29,59 +20,84 @@ const App: React.FC = () => {
   return (
     <Router>
       <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-        <SidebarProvider>
-          <AppSidebar />
-          <SidebarInset>
-            <header className="flex h-16 shrink-0 items-center justify-between gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
-              <div className="flex items-center gap-2 px-4">
-                <SidebarTrigger className="-ml-1" />
-                <Separator orientation="vertical" className="mr-2 h-4" />
-                {/* <Breadcrumb>
-                  <BreadcrumbList>
-                    <BreadcrumbItem className="hidden md:block">
-                      <BreadcrumbLink href="#">Dashboard</BreadcrumbLink>
-                    </BreadcrumbItem>
-                    <BreadcrumbSeparator className="hidden md:block" />
-                    <BreadcrumbItem>
-                    <BreadcrumbPage>Data Fetching</BreadcrumbPage>
-                  </BreadcrumbItem>
-                  </BreadcrumbList>
-                </Breadcrumb> */}
-                <AppBreadcrumb />
-              </div>
-              <div className="px-4">
-                <ModeToggle />
-              </div>
-            </header>
-            {/* <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-            <div className="grid auto-rows-min gap-4 md:grid-cols-3">
-              <div className="aspect-video rounded-xl bg-muted/50" />
-              <div className="aspect-video rounded-xl bg-muted/50" />
-              <div className="aspect-video rounded-xl bg-muted/50" />
-            </div>
-            <div className="min-h-[100vh] flex-1 rounded-xl bg-muted/50 md:min-h-min" />
-          </div> */}
-            <div className="flex p-4 pt-0">
-              <Routes>
-                <Route path="/masters/ledger" element={<LedgerMaster />} />
-                <Route path="/masters/product" element={<ProductMaster />} />
-                <Route
-                  path="/transaction/payment-receipt"
-                  element={<PaymentReceipt />}
-                />
-                <Route
-                  path="/transaction/invoice-proforma"
-                  element={<InvoiceProforma />}
-                />
-                <Route
-                  path="/reports/LedgerReport"
-                  element={<LedgerReport />}
-                />
-                <Route path="/base/BaseMaster" element={<BaseMaster />} />
-              </Routes>
-            </div>
-          </SidebarInset>
-        </SidebarProvider>
+        {/* <div className="flex w-full p-4 justify-end">
+          <ModeToggle />
+        </div> */}
+        {/* <div className="flex w-full items-center justify-center"> */}
+        {/* <div className="w-full max-w-md"> */}
+        {/* <Login /> */}
+
+        <Routes>
+          <Route path="/" element={<Navigate to="/login" />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+
+          <Route
+            path="/base/BaseMaster"
+            element={
+              <Dashboard>
+                <BaseMaster />
+              </Dashboard>
+            }
+          />
+
+          <Route
+            path="masters/ledger"
+            element={
+              <Dashboard>
+                <LedgerMaster />
+              </Dashboard>
+            }
+          />
+          <Route
+            path="masters/product"
+            element={
+              <Dashboard>
+                <ProductMaster />
+              </Dashboard>
+            }
+          />
+          <Route
+            path="transaction/payment-receipt"
+            element={
+              <Dashboard>
+                <PaymentReceipt />
+              </Dashboard>
+            }
+          />
+          <Route
+            path="transaction/invoice-proforma"
+            element={
+              <Dashboard>
+                <InvoiceProforma />
+              </Dashboard>
+            }
+          />
+          <Route
+            path="reports/LedgerReport"
+            element={
+              <Dashboard>
+                <LedgerReport />
+              </Dashboard>
+            }
+          />
+
+          {/* </Route> */}
+          {/* <Route path="/masters/ledger" element={<LedgerMaster />} />
+            <Route path="/masters/product" element={<ProductMaster />} />
+            <Route
+              path="/transaction/payment-receipt"
+              element={<PaymentReceipt />}
+            />
+            <Route
+              path="/transaction/invoice-proforma"
+              element={<InvoiceProforma />}
+            />
+            <Route path="/reports/LedgerReport" element={<LedgerReport />} />
+            <Route path="/base/BaseMaster" element={<BaseMaster />} /> */}
+        </Routes>
+        {/* </div> */}
+        {/* </div> */}
       </ThemeProvider>
     </Router>
   );

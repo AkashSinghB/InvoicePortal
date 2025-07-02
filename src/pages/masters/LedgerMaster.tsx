@@ -56,8 +56,8 @@ const commonSchema = {
 const partyDetailsSchema = {
   AddressLine1: z.string().min(1, "Address Line 1 is required"),
   AddressLine2: z.string().optional(),
-  City: z.string().min(1, "City is required"),
-  State: z.string().min(1, "State is required"),
+  CityPid: z.string().min(1, "City is required"),
+  StatePid: z.string().min(1, "State is required"),
   PostalCode: z
     .string()
     .regex(/^\d{6}$/, "Postal Code must be exactly 6 digits"),
@@ -156,8 +156,8 @@ const LedgerMaster: React.FC = () => {
       // Party details
       AddressLine1: "",
       AddressLine2: "",
-      City: "",
-      State: "",
+      CityPid: "",
+      StatePid: "",
       PostalCode: "",
       Country: "India",
       PhoneNumber: "",
@@ -210,8 +210,8 @@ const LedgerMaster: React.FC = () => {
               // For party variant fields:
               AddressLine1: partyDetails.addressLine1 || "",
               AddressLine2: partyDetails.addressLine2 || "",
-              City: partyDetails.city || "",
-              State: partyDetails.state || "",
+              CityPid: partyDetails.cityPid || "",
+              StatePid: partyDetails.statePid || "",
               PostalCode: partyDetails.postalCode || "",
               Country: partyDetails.country || "",
               PhoneNumber: partyDetails.phoneNumber || "",
@@ -264,6 +264,8 @@ const LedgerMaster: React.FC = () => {
 
   // Submit handler.
   async function onSubmit(values: z.infer<typeof formSchema>) {
+    console.log("values", values);
+    return;
     if (values.BankDetails && bankDetails.length === 0) {
       methods.setError("BankDetails", {
         message:
@@ -295,8 +297,8 @@ const LedgerMaster: React.FC = () => {
       const {
         AddressLine1,
         AddressLine2,
-        City,
-        State,
+        CityPid,
+        StatePid,
         PostalCode,
         Country,
         PhoneNumber,
@@ -305,14 +307,15 @@ const LedgerMaster: React.FC = () => {
         GSTNumber,
         PANNumber,
       } = values;
+
       payload = {
         CompanyName: values.CompanyName,
         SubHead: values.SubHead,
         PartyDetails: {
           AddressLine1,
           AddressLine2,
-          City,
-          State,
+          CityPid,
+          StatePid,
           PostalCode,
           Country,
           PhoneNumber,

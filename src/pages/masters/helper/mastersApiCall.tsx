@@ -1,5 +1,5 @@
 const API_URL = import.meta.env.VITE_API_URL;
-const API_TOKEN = import.meta.env.VITE_API_TOKEN;
+const API_TOKEN = sessionStorage.getItem("token") ?? "";
 
 export async function fetchLedgerDetails(pid: string): Promise<any> {
   try {
