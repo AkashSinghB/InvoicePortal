@@ -26,7 +26,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 
 const API_URL = import.meta.env.VITE_API_URL;
-const API_TOKEN = import.meta.env.VITE_API_TOKEN;
+const API_TOKEN = sessionStorage.getItem("token") ?? "";
 
 // Define BankDetail type.
 interface BankDetail {
@@ -56,8 +56,8 @@ const commonSchema = {
 const partyDetailsSchema = {
   AddressLine1: z.string().min(1, "Address Line 1 is required"),
   AddressLine2: z.string().optional(),
-  CityPid: z.string().min(1, "City is required"),
-  StatePid: z.string().min(1, "State is required"),
+  City: z.number().min(1, "City is required"),
+  State: z.number().min(1, "State is required"),
   PostalCode: z
     .string()
     .regex(/^\d{6}$/, "Postal Code must be exactly 6 digits"),
@@ -156,8 +156,8 @@ const LedgerMaster: React.FC = () => {
       // Party details
       AddressLine1: "",
       AddressLine2: "",
-      CityPid: "",
-      StatePid: "",
+      City: "",
+      State: "",
       PostalCode: "",
       Country: "India",
       PhoneNumber: "",
@@ -210,8 +210,8 @@ const LedgerMaster: React.FC = () => {
               // For party variant fields:
               AddressLine1: partyDetails.addressLine1 || "",
               AddressLine2: partyDetails.addressLine2 || "",
-              CityPid: partyDetails.cityPid || "",
-              StatePid: partyDetails.statePid || "",
+              City: partyDetails.cityPid || "",
+              State: partyDetails.statePid || "",
               PostalCode: partyDetails.postalCode || "",
               Country: partyDetails.country || "",
               PhoneNumber: partyDetails.phoneNumber || "",
@@ -264,8 +264,6 @@ const LedgerMaster: React.FC = () => {
 
   // Submit handler.
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log("values", values);
-    return;
     if (values.BankDetails && bankDetails.length === 0) {
       methods.setError("BankDetails", {
         message:
@@ -297,8 +295,8 @@ const LedgerMaster: React.FC = () => {
       const {
         AddressLine1,
         AddressLine2,
-        CityPid,
-        StatePid,
+        City,
+        State,
         PostalCode,
         Country,
         PhoneNumber,
@@ -314,8 +312,8 @@ const LedgerMaster: React.FC = () => {
         PartyDetails: {
           AddressLine1,
           AddressLine2,
-          CityPid,
-          StatePid,
+          City,
+          State,
           PostalCode,
           Country,
           PhoneNumber,
@@ -359,7 +357,7 @@ const LedgerMaster: React.FC = () => {
     const isAdd = action === "add";
     const endpoint = isAdd ? "api/ledger/create" : "api/ledger/update/" + pid;
     const methodType = isAdd ? "POST" : "PUT";
-    console.log("payload", payload);
+    // console.log("payload", payload);
     try {
       const response = await fetch(API_URL + endpoint, {
         method: methodType,

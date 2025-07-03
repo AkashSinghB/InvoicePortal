@@ -51,9 +51,9 @@ const DebtorCreditorForm: React.FC<DebtorCreditorFormProps> = ({
   const [stateName, setStateName] = useState<
     { id: number; label: string; value: string }[]
   >([]);
-  const [cityName, setCityName] = useState<{ label: string; value: string }[]>(
-    []
-  );
+  const [cityName, setCityName] = useState<
+    { id: number; label: string; value: string }[]
+  >([]);
 
   useEffect(() => {
     if (ledgerDetails?.table1) {
@@ -61,7 +61,7 @@ const DebtorCreditorForm: React.FC<DebtorCreditorFormProps> = ({
       const options = ledgerDetails.table1.map((item) => ({
         id: item.pid,
         label: item.stateName,
-        value: item.stateName,
+        value: item.pid.toString(),
       }));
       setStateName(options);
     }
@@ -81,8 +81,9 @@ const DebtorCreditorForm: React.FC<DebtorCreditorFormProps> = ({
       const filteredCities = ledgerDetails.table2
         .filter((city) => city.statePid === selectedStatePid)
         .map((city) => ({
+          id: city.pid,
           label: city.cityName,
-          value: city.cityName,
+          value: city.pid.toString(),
         }));
       setCityName(filteredCities);
     }
@@ -90,14 +91,16 @@ const DebtorCreditorForm: React.FC<DebtorCreditorFormProps> = ({
 
   useEffect(() => {
     const currentState = getValues("State");
+    console.log("Current State:", currentState);
     if (currentState && stateName.length > 0) {
-      const selected = stateName.find((opt) => opt.value === currentState);
+      const selected = stateName.find((opt) => opt.value == currentState);
       if (selected) {
         updateCityOptions(selected.id);
         //setValue("City", "");
       }
     }
   }, [ledgerDetails, stateName, getValues, setValue]);
+
   return (
     <div id="CustomerDtl" className="flex gap-3 w-full flex-col">
       <div className="flex gap-8 w-full">
@@ -190,9 +193,8 @@ const DebtorCreditorForm: React.FC<DebtorCreditorFormProps> = ({
                       disabled={isView}
                     >
                       {field.value
-                        ? stateName.find(
-                            (option) => option.value === field.value
-                          )?.label
+                        ? stateName.find((option) => option.id === field.value)
+                            ?.label
                         : "Select State"}
                       <ChevronsUpDown className="opacity-50" />
                     </Button>
@@ -213,7 +215,7 @@ const DebtorCreditorForm: React.FC<DebtorCreditorFormProps> = ({
                             value={option.label}
                             key={option.value}
                             onSelect={() => {
-                              field.onChange(option.value);
+                              field.onChange(option.id);
                               updateCityOptions(option.id);
                               setValue("City", "");
                             }}
@@ -223,7 +225,7 @@ const DebtorCreditorForm: React.FC<DebtorCreditorFormProps> = ({
                             <Check
                               className={cn(
                                 "ml-auto",
-                                option.value === field.value
+                                option.id === field.value
                                   ? "opacity-100"
                                   : "opacity-0"
                               )}
@@ -258,9 +260,8 @@ const DebtorCreditorForm: React.FC<DebtorCreditorFormProps> = ({
                       disabled={isView}
                     >
                       {field.value
-                        ? cityName.find(
-                            (option) => option.value === field.value
-                          )?.label
+                        ? cityName.find((option) => option.id === field.value)
+                            ?.label
                         : "Select City"}
                       <ChevronsUpDown className="opacity-50" />
                     </Button>
@@ -281,7 +282,7 @@ const DebtorCreditorForm: React.FC<DebtorCreditorFormProps> = ({
                             value={option.label}
                             key={option.value}
                             onSelect={() => {
-                              field.onChange(option.value);
+                              field.onChange(option.id);
                             }}
                             disabled={isView}
                           >
@@ -289,7 +290,7 @@ const DebtorCreditorForm: React.FC<DebtorCreditorFormProps> = ({
                             <Check
                               className={cn(
                                 "ml-auto",
-                                option.value === field.value
+                                option.id === field.value
                                   ? "opacity-100"
                                   : "opacity-0"
                               )}
