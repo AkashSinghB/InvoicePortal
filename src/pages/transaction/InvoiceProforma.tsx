@@ -108,6 +108,7 @@ interface PartyDetail {
   addressLine2: string;
   city: string;
   state: string;
+  statePid: number;
   postalCode: string;
   registrationType: string;
   gstNumber: string;
@@ -133,6 +134,7 @@ const InvoiceGenerator: React.FC = () => {
     postalCode: "",
     registrationType: "",
     gstNumber: "",
+    statePid: 0,
   });
   const [invoiceItems, setInvoiceItems] = useState<InvoiceItem[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<number | "">("");
@@ -143,14 +145,12 @@ const InvoiceGenerator: React.FC = () => {
   const [partyPopoverOpen, setPartyPopoverOpen] = useState(false);
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedRow, setSelectedRow] = useState<InvoiceItem | null>(null);
-  const [state, setState] = useState("");
+  const [state, setState] = useState<number>(0);
   const [totalAmt, setTotalAmt] = useState<number>(0);
 
   // Add new state variables for discount and GST percentages
   const [discount, setDiscount] = useState<number>(0);
-  const [cgstPercent, setCgstPercent] = useState<number>(0);
-  const [sgstPercent, setSgstPercent] = useState<number>(0);
-  const [igstPercent, setIgstPercent] = useState<number>(0);
+  const [partyDetailsDialogOpen, setPartyDetailsDialogOpen] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -227,9 +227,9 @@ const InvoiceGenerator: React.FC = () => {
         postalCode: data.table[0].postalCode,
         registrationType: data.table[0].registrationType,
         gstNumber: data.table[0].gstNumber,
+        statePid: data.table[0].statePid,
       });
-      setState(data.table1[0].state);
-      //console.log("state", data.table1[0].state);
+      setState(data.table1[0].statePid);
     });
   };
 
@@ -321,9 +321,9 @@ const InvoiceGenerator: React.FC = () => {
   const totalAmount = calculateTotal();
   const discountAmount = (totalAmount * discount) / 100;
   const taxableAmount = totalAmount - discountAmount;
-  const cgstAmount = (taxableAmount * cgstPercent) / 100;
-  const sgstAmount = (taxableAmount * sgstPercent) / 100;
-  const igstAmount = calculateTax();
+  const cgstAmount = state === selectedParty.statePid ? calculateTax() / 2 : 0;
+  const sgstAmount = cgstAmount;
+  const igstAmount = state === selectedParty.statePid ? 0 : calculateTax();
   const netAmount = taxableAmount + cgstAmount + sgstAmount + igstAmount;
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -425,124 +425,87 @@ const InvoiceGenerator: React.FC = () => {
                 render={({ field }) => (
                   <FormItem className="w-2/6 flex flex-col justify-end gap-1">
                     <FormLabel>Party A/C Name</FormLabel>
-                    <Popover
-                      open={partyPopoverOpen}
-                      onOpenChange={setPartyPopoverOpen}
-                    >
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant="outline"
-                            role="combobox"
-                            className={cn(
-                              "justify-between",
-                              !field.value && "text-muted-foreground"
-                            )}
-                          >
-                            {field.value
-                              ? party.find(
-                                  (option) => option.value === field.value
-                                )?.value
-                              : "Select Ledger Account"}
-                            <ChevronsUpDown className="opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-[200px] p-0">
-                        <Command>
-                          <CommandInput
-                            placeholder="Search Party..."
-                            className="h-9"
-                          />
-                          <CommandList>
-                            <CommandEmpty>No Party found</CommandEmpty>
-                            <CommandGroup>
-                              {party.map((option) => (
-                                <CommandItem
-                                  value={option.label}
-                                  key={option.value}
-                                  onSelect={() => {
-                                    field.onChange(option.value);
-                                    handlePartySelect(
-                                      option.label,
-                                      option.value
-                                    );
-                                    setPartyPopoverOpen(false);
-                                  }}
-                                >
-                                  {option.value}
-                                  <Check
-                                    className={cn(
-                                      "ml-auto",
-                                      option.value === field.value
-                                        ? "opacity-100"
-                                        : "opacity-0"
-                                    )}
-                                  />
-                                </CommandItem>
-                              ))}
-                            </CommandGroup>
-                          </CommandList>
-                        </Command>
-                      </PopoverContent>
-                    </Popover>
+                    <div className="flex items-center">
+                      {/* Keep dropdown as it is */}
+                      <Popover
+                        open={partyPopoverOpen}
+                        onOpenChange={setPartyPopoverOpen}
+                      >
+                        <PopoverTrigger asChild>
+                          <FormControl className="w-full">
+                            <Button
+                              variant="outline"
+                              role="combobox"
+                              className={cn(
+                                "justify-between",
+                                !field.value && "text-muted-foreground"
+                              )}
+                            >
+                              {field.value
+                                ? party.find(
+                                    (option) => option.value === field.value
+                                  )?.value
+                                : "Select Ledger Account"}
+                              <ChevronsUpDown className="opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[300px] p-0">
+                          <Command>
+                            <CommandInput
+                              placeholder="Search Party..."
+                              className="h-9"
+                            />
+                            <CommandList>
+                              <CommandEmpty>No Party found</CommandEmpty>
+                              <CommandGroup>
+                                {party.map((option) => (
+                                  <CommandItem
+                                    value={option.label}
+                                    key={option.value}
+                                    onSelect={() => {
+                                      field.onChange(option.value);
+                                      handlePartySelect(
+                                        option.label,
+                                        option.value
+                                      );
+                                      setPartyPopoverOpen(false);
+                                    }}
+                                  >
+                                    {option.value}
+                                    <Check
+                                      className={cn(
+                                        "ml-auto",
+                                        option.value === field.value
+                                          ? "opacity-100"
+                                          : "opacity-0"
+                                      )}
+                                    />
+                                  </CommandItem>
+                                ))}
+                              </CommandGroup>
+                            </CommandList>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
+                      {/* Add show party details button */}
+                      <Button
+                        type="button"
+                        size="sm"
+                        className="ml-2"
+                        onClick={() => setPartyDetailsDialogOpen(true)}
+                      >
+                        Show Party Details
+                      </Button>
+                    </div>
                     <FormMessage />
                   </FormItem>
                 )}
               />
             </div>
           </div>
-          <div className="flex gap-6 items-start border p-4 rounded-md">
-            {selectedParty.companyName ? (
-              <>
-                <div className="w-full">
-                  <div className="flex">
-                    <span className="font-medium w-36">Bill To: </span>
-                    <label>{selectedParty.companyName}</label>
-                  </div>
-                  <div className="flex">
-                    <span className="font-medium w-36">Address:</span>
-                    <label>
-                      {selectedParty.addressLine1}, {selectedParty.addressLine2}
-                    </label>
-                  </div>
-                  <div className="flex">
-                    <span className="font-medium w-36">Place of supply:</span>
-                    <label>{selectedParty.city}</label>
-                  </div>
-                  <div className="flex">
-                    <span className="font-medium w-36">Registration Type:</span>
-                    <label>{selectedParty.registrationType}</label>
-                  </div>
-                </div>
-                <Separator orientation="vertical" />
-                <div className="w-full">
-                  <div className="flex gap-5 w-full">
-                    <div className="flex">
-                      <span className="font-medium w-24">State:</span>
-                      <label>{selectedParty.state}</label>
-                    </div>
-                  </div>
-                  <div className="flex">
-                    <span className="font-medium w-24">City:</span>
-                    <label>{selectedParty.city}</label>
-                  </div>
-                  <div className="flex">
-                    <span className="font-medium w-24">Pin Code:</span>
-                    <label>{selectedParty.postalCode}</label>
-                  </div>
-                  <div className="flex gap-6">
-                    <div className="flex">
-                      <span className="font-medium w-24">GST:</span>
-                      <label>{selectedParty.gstNumber}</label>
-                    </div>
-                  </div>
-                </div>
-              </>
-            ) : (
-              <div>No party selected.</div>
-            )}
-          </div>
+          {/* Remove/hide inline party details */}
+          {/* <div id="Div_PartyDetails" ...> ... </div> */}
           <div>
             <FormField
               control={form.control}
@@ -875,6 +838,75 @@ const InvoiceGenerator: React.FC = () => {
           </Button>
         </div>
       </form>
+
+      {/* Party Details Dialog */}
+      <Dialog
+        open={partyDetailsDialogOpen}
+        onOpenChange={setPartyDetailsDialogOpen}
+      >
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Party Details</DialogTitle>
+          </DialogHeader>
+          {selectedParty.companyName ? (
+            <div className="flex gap-6 items-start">
+              <div className="w-full">
+                <div className="flex">
+                  <span className="font-medium w-36">Bill To: </span>
+                  <label>{selectedParty.companyName}</label>
+                </div>
+                <div className="flex">
+                  <span className="font-medium w-36">Address:</span>
+                  <label>
+                    {selectedParty.addressLine1}, {selectedParty.addressLine2}
+                  </label>
+                </div>
+                <div className="flex">
+                  <span className="font-medium w-36">Place of supply:</span>
+                  <label>{selectedParty.city}</label>
+                </div>
+                <div className="flex">
+                  <span className="font-medium w-36">Registration Type:</span>
+                  <label>{selectedParty.registrationType}</label>
+                </div>
+              </div>
+              <Separator orientation="vertical" />
+              <div className="w-full">
+                <div className="flex gap-5 w-full">
+                  <div className="flex">
+                    <span className="font-medium w-24">State:</span>
+                    <label>{selectedParty.state}</label>
+                  </div>
+                </div>
+                <div className="flex">
+                  <span className="font-medium w-24">City:</span>
+                  <label>{selectedParty.city}</label>
+                </div>
+                <div className="flex">
+                  <span className="font-medium w-24">Pin Code:</span>
+                  <label>{selectedParty.postalCode}</label>
+                </div>
+                <div className="flex gap-6">
+                  <div className="flex">
+                    <span className="font-medium w-24">GST:</span>
+                    <label>{selectedParty.gstNumber}</label>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div>No party selected.</div>
+          )}
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setPartyDetailsDialogOpen(false)}
+            >
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* ------ popup ----------*/}
       <Dialog

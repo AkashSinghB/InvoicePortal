@@ -156,8 +156,8 @@ const LedgerMaster: React.FC = () => {
       // Party details
       AddressLine1: "",
       AddressLine2: "",
-      City: "",
-      State: "",
+      City: 0,
+      State: 0,
       PostalCode: "",
       Country: "India",
       PhoneNumber: "",
