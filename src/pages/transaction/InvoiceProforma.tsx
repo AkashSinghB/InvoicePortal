@@ -54,6 +54,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import {
   createUpdateInvoiceSales,
+  fetchInvDetailsForPrint,
   fetchInvoiceDetails,
   fetchPartyDetails,
 } from "./helper/TransactionApiCall";
@@ -177,6 +178,7 @@ const InvoiceGenerator: React.FC = () => {
         const prodList: Product[] = data.table1.map((item: any) => ({
           id: item.pid,
           name: item.productName,
+          description: item.productDescription,
           price: item.unitPrice,
           hsnCode: item.hsnCode || "",
           taxPerc: item.taxPerc || 0,
@@ -209,7 +211,7 @@ const InvoiceGenerator: React.FC = () => {
           hsnCode: item.hsnCode,
           taxPerc: item.taxPerc_GST,
         }));
-        //console.log("Invoice Details:", data.table3);
+        //console.log("products Details:", data.table3);
         setInvoiceItems(invoiceDetails);
       }
     });
@@ -279,6 +281,10 @@ const InvoiceGenerator: React.FC = () => {
       InvoiceNo: values.InvoiceNo,
       InvoiceDate: values.InvoiceDate,
       PaymentStatus: values.PaymentStatus,
+      GSTAmount: 0,
+      SGSTAmount: sgstAmount,
+      CGSTAmount: cgstAmount,
+      IGSTAmount: igstAmount,
       TotalAmount: calculateTotal(),
       InvoiceDetails: invoiceItems.map((item) => ({
         productPid: item.productId,
@@ -333,6 +339,33 @@ const InvoiceGenerator: React.FC = () => {
   const handleDelete = (itemToDelete: InvoiceItem) => {
     const updatedItems = invoiceItems.filter((item) => item !== itemToDelete);
     setInvoiceItems(updatedItems);
+  };
+
+  const PrintPdf = () => {
+    fetchInvDetailsForPrint(pid).then((data) => {
+      console.log("Print Data:", data);
+      if (data.table) {
+        //bind company
+      }
+    });
+  };
+
+  const GetProductDesc = () => {
+    if (!selectedProduct) return;
+    const product = products.find((p) => p.id === Number(selectedProduct));
+    if (!product) return;
+    //console.log(product);
+    setInvoiceItems([
+      ...invoiceItems,
+      {
+        productId: product.id,
+        description: description,
+        quantity: quantity,
+        price: product.price,
+        hsnCode: product.hsnCode || "",
+        taxPerc: product.taxPerc || 0,
+      },
+    ]);
   };
 
   return (
@@ -659,6 +692,7 @@ const InvoiceGenerator: React.FC = () => {
                                 );
                                 setOpen(false);
                                 setSelectedProduct(Number(option.id));
+                                setDescription(option.description || "");
                               }}
                             >
                               {option.name} - ₹{option.price}
@@ -833,9 +867,14 @@ const InvoiceGenerator: React.FC = () => {
               </tbody>
             </table>
           </div>
-          <Button type="button" onClick={() => onSubmit(form.getValues())}>
-            {action === "add" ? "Submit" : "Update"}
-          </Button>
+          <div className="flex gap-2">
+            <Button type="button" onClick={() => onSubmit(form.getValues())}>
+              {action === "add" ? "Submit" : "Update"}
+            </Button>
+            <Button type="button" onClick={PrintPdf}>
+              Print
+            </Button>
+          </div>
         </div>
       </form>
 

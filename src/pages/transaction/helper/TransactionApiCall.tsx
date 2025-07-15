@@ -65,3 +65,22 @@ export async function createUpdateInvoiceSales(
     return Promise.reject(error);
   }
 }
+
+export async function fetchInvDetailsForPrint(pid: string): Promise<any> {
+  try {
+    const response = await fetch(`${API_URL}api/invoice/sales/print/${pid}`, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${API_TOKEN}`,
+      },
+    });
+    if (!response.ok) {
+      throw new Error(`Error: ${response.status}`);
+    }
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error fetching Sales Invoice details:", error);
+    return null;
+  }
+}
